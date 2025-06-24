@@ -3,6 +3,8 @@ import sys
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from prompts import system_prompt
+from schemas import available_functions
 
 
 def main():
@@ -31,14 +33,26 @@ def main():
 
     response = client.models.generate_content(
         model='gemini-2.0-flash-001',
-        contents=messages
+        contents=messages,
+        config=types.GenerateContentConfig(
+            tools=[available_functions], system_instruction=system_prompt)
     )
+
+    function_call_part = next(
+        (part.function_call for part in response.candidates[0].content.parts if part.function_call),
+        None
+    )
+
+    if function_call_part:
+        print(f"Calling function: {function_call_part.name}({function_call_part.args})")
+    else:
+        print("Response:")    
+        print(response.text)
 
     if verbose and hasattr(response, 'usage_metadata') and response.usage_metadata is not None:
         print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
         print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
-    print("Response:")    
-    print(response.text)
+    
 
 if __name__ == "__main__":
     main()
