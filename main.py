@@ -43,25 +43,36 @@ def main():
 
         candidates = response.candidates
         if not candidates:
-            print("No response from model")
+            print("No valid response from model")
             break
-        for candidate in candidates:
-            if candidate.content:
-                messages.append(candidate.content)
+        if verbose:
+            print(f"Step {step + 1}: Model responded.")
+
+        messages.append(candidates[0].content)
+
+        #for candidate in candidates:
+           #if candidate.content:
+                #messages.append(candidate.content)
 
         function_call_part = None
-        for part in candidates[0].content.parts:
-            if hasattr(part, "function_call"):
-                function_call_part = part.function_call
+        for candidate in candidates:
+            for part in candidate.content.parts:
+                if hasattr(part, "function_call"):
+                    function_call_part = part.function_call
+                    break
+            if function_call_part:
                 break
         
         if function_call_part:
-            function_call_result =call_function(function_call_part, verbose=True)
+            if verbose:
+                print(f"Function call: {function_call_part.name}({function_call_part.args})")
+
+            function_call_result =call_function(function_call_part, verbose=verbose)
             messages.append(function_call_result)
 
             if verbose:
                 result_data = function_call_result.parts[0].function_response.response
-                print(f"-> {result_data}")
+                print(f"-> Function result: {result_data}")
 
         else:
             final_text = candidates[0].content.parts[0].text
