@@ -5,6 +5,7 @@ from google import genai
 from google.genai import types
 from prompts import system_prompt
 from schemas import available_functions
+from functions.call_function import call_function
 
 
 def main():
@@ -42,9 +43,17 @@ def main():
         (part.function_call for part in response.candidates[0].content.parts if part.function_call),
         None
     )
+    #for function_call_part in response.function_calls:
+     #  print(f"Calling function: {function_call_part.name}({function_call_part.args})")
 
     if function_call_part:
-        print(f"Calling function: {function_call_part.name}({function_call_part.args})")
+        function_call_result =call_function(function_call_part, verbose=True)
+        if (
+            hasattr(function_call_result.parts[0],"function_response") and function_call_result.parts[0].function_response.response
+        ):
+            print("->", function_call_result.parts[0].function_response.response)
+        else:
+            raise RuntimeError("Fatal: Missing function response in call_function return.")
     else:
         print("Response:")    
         print(response.text)
