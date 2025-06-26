@@ -13,7 +13,7 @@ def call_function(function_call_part: types.FunctionCall, verbose=False):
     if verbose:
         print(f"Calling function: {function_name}({function_args})")
     else:
-        print(f" - Calling funcyion: {function_name}")
+        print(f" - Calling function: {function_name}")
 
     working_directory = WORKING_DIR
     function_args["working_directory"] = working_directory
